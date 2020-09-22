@@ -44,7 +44,7 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
         });
     } else if (width) {
       sharp(getImage(category))
-        .resize(Number(width))
+        .resize(Number(width), null)
         .toBuffer()
         .then((data) => {
           res.send(data);
