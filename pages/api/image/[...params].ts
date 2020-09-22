@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
 import sharp from 'sharp'
 import path from 'path'
 
@@ -12,12 +12,14 @@ const getImage = (category: string): string => {
   }
 }
 
-export default (req: NextApiRequest, res: NextApiResponse) => {
+export default (
+  req: NextApiRequest,
+  res: NextApiResponse
+): Promise<NextApiHandler> => {
   return new Promise((resolve, reject) => {
     const {
       query: { params }
     } = req
-    console.log(params)
 
     res.setHeader('Content-Type', 'image/jpeg')
     const category = params[0]
@@ -38,9 +40,8 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
           resolve()
         })
         .catch((err) => {
-          console.log(err)
           res.send({ error: true })
-          reject(new Error('Error resizing file'))
+          reject(new Error(err))
         })
     } else if (width) {
       sharp(getImage(category))
@@ -51,9 +52,8 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
           resolve()
         })
         .catch((err) => {
-          console.log(err)
           res.send({ error: true })
-          reject(new Error('Error resizing file'))
+          reject(new Error(err))
         })
     } else {
       sharp(getImage(category))
@@ -63,9 +63,8 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
           resolve()
         })
         .catch((err) => {
-          console.log(err)
           res.send({ error: true })
-          reject(new Error('Error resizing file'))
+          reject(new Error(err))
         })
     }
   })
