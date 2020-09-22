@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/router';
+import React, { useEffect } from 'react'
+import { useRouter } from 'next/router'
 
 export default function Home() {
-  const router = useRouter();
-  return <div />;
+  const router = useRouter()
+  return <div />
 }
