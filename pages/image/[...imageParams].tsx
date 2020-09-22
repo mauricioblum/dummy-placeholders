@@ -6,7 +6,7 @@ const ImageParams = () => {
 
   useEffect(() => {
     const params = router.query.imageParams;
-    const queryParams = params.toString().replace(',', '/');
+    const queryParams = params.toString().replace(/,/g, '/');
     console.log(queryParams);
     router.push(`/api/image/${queryParams}`);
   }, []);
