@@ -1,14 +1,59 @@
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
 import sharp from 'sharp'
 import path from 'path'
+import axios from 'axios'
 
-const getImage = (category: string): string => {
-  if (category === 'car') {
-    return path.resolve('assets', 'car', 'car.jpg')
-  } else if (category === 'food') {
-    return path.resolve('assets', 'food', 'food.jpg')
+const getRandomImageNumber = (max?: number): string => {
+  // generate a random number between 1 and 10
+  const randomInt = Math.floor(Math.random() * max + 1 || 11)
+  return randomInt.toString()
+}
+
+const downloadImage = async (searchQuery: string) => {
+  const response = await axios.get('https://pixabay.com/api', {
+    params: {
+      key: process.env.PIXABAY_API_KEY,
+      image_type: 'photo',
+      orientation: 'horizontal',
+      min_width: 1280,
+      q: searchQuery
+    }
+  })
+  const images = response.data.hits
+  if (images.length) {
+    const imgURL =
+      response.data.hits[getRandomImageNumber(images.length - 1)].largeImageURL
+
+    const imgResponse = await axios.get(imgURL, {
+      responseType: 'arraybuffer'
+    })
+
+    const imgBuffer = Buffer.from(imgResponse.data)
+
+    return imgBuffer
   } else {
-    return path.resolve('assets', 'soccer', 'soccer.jpg')
+    return path.resolve('assets', 'default', 'error-default.png')
+  }
+}
+
+const getImage = async (category: string): Promise<string | Buffer> => {
+  switch (category) {
+    case 'car':
+      return path.resolve('assets', 'car', `car-${getRandomImageNumber()}.jpg`)
+    case 'food':
+      return path.resolve(
+        'assets',
+        'food',
+        `food-${getRandomImageNumber()}.jpg`
+      )
+    case 'soccer':
+      return path.resolve(
+        'assets',
+        'soccer',
+        `soccer-${getRandomImageNumber(4)}.jpg`
+      )
+    default:
+      return await downloadImage(category)
   }
 }
 
@@ -31,42 +76,46 @@ export default (
       return res.send({ error: 'No category specified!' })
     }
 
-    if (width && height) {
-      sharp(getImage(category))
-        .resize(Number(width), Number(height), { fit: 'fill' })
-        .toBuffer()
-        .then((data) => {
-          res.send(data)
-          resolve()
-        })
-        .catch((err) => {
-          res.send({ error: true })
-          reject(new Error(err))
-        })
-    } else if (width) {
-      sharp(getImage(category))
-        .resize(Number(width), null)
-        .toBuffer()
-        .then((data) => {
-          res.send(data)
-          resolve()
-        })
-        .catch((err) => {
-          res.send({ error: true })
-          reject(new Error(err))
-        })
-    } else {
-      sharp(getImage(category))
-        .toBuffer()
-        .then((data) => {
-          res.send(data)
-          resolve()
-        })
-        .catch((err) => {
-          res.send({ error: true })
-          reject(new Error(err))
-        })
-    }
+    getImage(category)
+      .then((image) => {
+        if (width && height) {
+          sharp(image)
+            .resize(Number(width), Number(height), { fit: 'fill' })
+            .toBuffer()
+            .then((data) => {
+              res.send(data)
+              resolve()
+            })
+            .catch((err) => {
+              res.send({ error: true })
+              reject(new Error(err))
+            })
+        } else if (width) {
+          sharp(image)
+            .resize(Number(width), null)
+            .toBuffer()
+            .then((data) => {
+              res.send(data)
+              resolve()
+            })
+            .catch((err) => {
+              res.send({ error: true })
+              reject(new Error(err))
+            })
+        } else {
+          sharp(image)
+            .toBuffer()
+            .then((data) => {
+              res.send(data)
+              resolve()
+            })
+            .catch((err) => {
+              res.send({ error: true })
+              reject(new Error(err))
+            })
+        }
+      })
+      .catch((err) => console.log(err))
   })
 }
 
