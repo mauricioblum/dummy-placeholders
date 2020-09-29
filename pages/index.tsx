@@ -43,6 +43,8 @@ const Home: NextPage = () => {
           <img
             src={`${websiteURL}api/image/food/100/100`}
             alt="Generated Dummy"
+            width="100"
+            height="100"
           />
         </div>
       </main>
