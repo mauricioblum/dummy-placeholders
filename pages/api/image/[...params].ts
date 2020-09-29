@@ -1,4 +1,5 @@
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
+import { cors, runMiddleware } from '../../helpers/cors'
 import sharp from 'sharp'
 import path from 'path'
 import axios from 'axios'
@@ -6,7 +7,6 @@ import axios from 'axios'
 const getRandomImageNumber = (max?: number): string => {
   // generate a random number between 1 and 10
   const randomInt = Math.floor(Math.random() * max + 1 || Math.random() * 11)
-  console.log(randomInt)
   return randomInt.toString()
 }
 
@@ -22,8 +22,14 @@ const downloadImage = async (searchQuery: string) => {
   })
   const images = response.data.hits
   if (images.length) {
-    const imgURL =
-      response.data.hits[getRandomImageNumber(images.length - 1)].largeImageURL
+    let imgURL
+    if (images.length === 1) {
+      imgURL = response.data.hits[0].largeImageURL
+    } else {
+      imgURL =
+        response.data.hits[getRandomImageNumber(images.length - 1)]
+          .largeImageURL
+    }
 
     const imgResponse = await axios.get(imgURL, {
       responseType: 'arraybuffer'
@@ -58,10 +64,10 @@ const getImage = async (category: string): Promise<string | Buffer> => {
   }
 }
 
-export default (
+function getResizedImage(
   req: NextApiRequest,
-  res: NextApiResponse
-): Promise<NextApiHandler> => {
+  res: NextApiResponse<any>
+): NextApiHandler<any> | PromiseLike<NextApiHandler<any>> {
   return new Promise((resolve, reject) => {
     const {
       query: { params }
@@ -79,21 +85,11 @@ export default (
 
     getImage(category)
       .then((image) => {
-        if (width && height) {
+        if (width) {
           sharp(image)
-            .resize(Number(width), Number(height), { fit: 'fill' })
-            .toBuffer()
-            .then((data) => {
-              res.send(data)
-              resolve()
+            .resize(Number(width), height ? Number(height) : Number(width), {
+              fit: 'cover'
             })
-            .catch((err) => {
-              res.send({ error: true })
-              reject(new Error(err))
-            })
-        } else if (width) {
-          sharp(image)
-            .resize(Number(width), null)
             .toBuffer()
             .then((data) => {
               res.send(data)
@@ -118,6 +114,14 @@ export default (
       })
       .catch((err) => console.log(err))
   })
+}
+
+export default async (
+  req: NextApiRequest,
+  res: NextApiResponse
+): Promise<NextApiHandler> => {
+  await runMiddleware(req, res, cors)
+  return getResizedImage(req, res)
 }
 
 export const config = {
