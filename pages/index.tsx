@@ -13,7 +13,6 @@ const Home: NextPage = () => {
   const [websiteURL, setWebsiteURL] = useState(
     'https://dummy-placeholders.vercel.app/'
   )
-  const [searchResultSrc, setSearchResultSrc] = useState('')
 
   useEffect(() => {
     setWebsiteURL(window.location.href)
@@ -39,16 +38,10 @@ const Home: NextPage = () => {
         search = search.concat(heightField.value)
       }
 
-      setSearchResultSrc(search)
+      window.open(search)
     },
     [websiteURL]
   )
-
-  useEffect(() => {
-    if (searchResultSrc !== '') {
-      window.open(searchResultSrc)
-    }
-  }, [searchResultSrc])
 
   return (
     <div className={styles.container}>
