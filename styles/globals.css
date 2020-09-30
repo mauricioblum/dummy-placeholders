@@ -33,6 +33,11 @@ p {
   color: var(--text-color);
 }
 
+button {
+  all: unset;
+  cursor: pointer;
+}
+
 * {
   box-sizing: border-box;
 }

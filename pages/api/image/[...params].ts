@@ -77,6 +77,7 @@ function getResizedImage(
     const category = params[0]
     const width = params[1]
     const height = params[2]
+    res.setHeader('Content-Disposition', `inline; filename=${category}.jpg`)
 
     if (!category) {
       reject(new Error('No Category'))

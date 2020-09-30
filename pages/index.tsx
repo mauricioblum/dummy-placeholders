@@ -1,16 +1,54 @@
-import React, { useMemo, useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback, FormEvent } from 'react'
 import Head from 'next/head'
 import styles from '../styles/Home.module.scss'
 import { NextPage } from 'next'
+
+interface FormValues extends HTMLInputElement {
+  searchTerm: { value: string }
+  widthField: { value: string }
+  heightField: { value: string }
+}
 
 const Home: NextPage = () => {
   const [websiteURL, setWebsiteURL] = useState(
     'https://dummy-placeholders.vercel.app/'
   )
+  const [searchResultSrc, setSearchResultSrc] = useState('')
 
   useEffect(() => {
     setWebsiteURL(window.location.href)
   }, [])
+
+  const handleSubmit = useCallback(
+    (e: FormEvent) => {
+      e.preventDefault()
+
+      const { searchTerm, widthField, heightField } = e.target as FormValues
+
+      if (searchTerm.value === '') {
+        return
+      }
+
+      let search = websiteURL + `api/image/${searchTerm.value}/`
+
+      if (widthField.value && heightField.value) {
+        search = search.concat(`${widthField.value}/${heightField.value}`)
+      } else if (widthField.value) {
+        search = search.concat(widthField.value)
+      } else if (heightField.value) {
+        search = search.concat(heightField.value)
+      }
+
+      setSearchResultSrc(search)
+    },
+    [websiteURL]
+  )
+
+  useEffect(() => {
+    if (searchResultSrc !== '') {
+      window.open(searchResultSrc)
+    }
+  }, [searchResultSrc])
 
   return (
     <div className={styles.container}>
@@ -46,6 +84,27 @@ const Home: NextPage = () => {
             width="100"
             height="100"
           />
+        </div>
+        <div className={styles.generator}>
+          <h3>Try it yourself!</h3>
+          <form name="image-generator" onSubmit={handleSubmit}>
+            <input placeholder="Search term" name="searchTerm" required />
+            <input
+              placeholder="Width"
+              type="number"
+              name="widthField"
+              maxLength={4}
+              max={9999}
+            />
+            <input
+              placeholder="Height"
+              type="number"
+              name="heightField"
+              maxLength={4}
+              max={9999}
+            />
+            <button type="submit">Generate</button>
+          </form>
         </div>
       </main>
       <footer className={styles.footer}>
