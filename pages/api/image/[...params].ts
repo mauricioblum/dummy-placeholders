@@ -1,5 +1,5 @@
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
-import { cors, runMiddleware } from '../../helpers/cors'
+import { cors, runMiddleware } from '../../../helpers/cors'
 import sharp from 'sharp'
 import path from 'path'
 import axios from 'axios'
